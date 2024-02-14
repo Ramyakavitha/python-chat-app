@@ -17,16 +17,22 @@ clients = set()
 clients_lock = threading.Lock()
 exit_flag = False
 
-def handle_client(conn, addr):
-    print(f"[NEW CONNECTION] {addr} Connected")
-    mydb = mysql.connector.connect(
+def connect_to_database():
+    db = mysql.connector.connect(
         host="localhost",
         user="root",
         password="admin",
         database="chat_db"
     )
-    mycursor = mydb.cursor()
+    cursor = db.cursor()
+    
+    return db, cursor
 
+mydb, mycursor = connect_to_database()
+
+def handle_client(conn, addr):
+    print(f"[NEW CONNECTION] {addr} Connected")
+    
     try:
         connected = True
         while connected:
@@ -36,9 +42,10 @@ def handle_client(conn, addr):
 
             if msg == DISCONNECT_MESSAGE:
                 connected = False
+                mycursor.close()
+                mydb.close()
                 print(f"{addr} Disconnected!")
-                continue  # Skip to the `finally` block to remove and close the connection
-
+            
             elif msg.startswith("route_"):
                 client_msg = msg.split(',')
                 command = client_msg[0].replace("route_", "")
@@ -95,7 +102,6 @@ def handle_client(conn, addr):
                     sql = "DELETE FROM sessions WHERE user_id = %s"
                     val = (user_id,)
                     mycursor.execute(sql, val)
-                    mydb.commit()
                     row = mycursor.fetchone()
 
                     if row[0]:
@@ -152,6 +158,7 @@ def handle_client(conn, addr):
                         OR (sender_id = %s AND receiver_id = %s)
                         ORDER BY id ASC;
                     """
+                    mydb.commit()
                     mycursor.execute(sql, (s_id, r_id, r_id, s_id))
                     rows = mycursor.fetchall()
                                                     
@@ -180,7 +187,7 @@ def handle_client(conn, addr):
                     mycursor.execute(sql, (sender_id, receiver_id, message))
                     mydb.commit()
                     if mycursor.rowcount:
-                        reply = "status:200, message:"
+                        reply = "status:200"
                     else:
                         reply = "status:404"
                     conn.send(reply.encode(FORMAT))
@@ -194,14 +201,12 @@ def handle_client(conn, addr):
 
     except Exception as e:
         print(f"An error occurred with {addr}: {str(e)}")
-        exception_stop()
-
+        exit_flag = False
     finally:
         with clients_lock:
             clients.remove(conn)
-        mycursor.close()
-        mydb.close()
-        conn.close()
+        if conn:
+            conn.close()
 
 def start():
     global exit_flag
