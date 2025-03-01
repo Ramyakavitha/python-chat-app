@@ -69,6 +69,5 @@ Once logged in, users can start sending and receiving messages in real-time.
 
 Users can type !exit to log out and exit the chat application.
 
-Contributing
-Contributions to this Chat App are welcome! If you find any bugs or have suggestions for new features, please open an issue or submit a pull request.
+
 
