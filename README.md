@@ -72,12 +72,3 @@ Users can type !exit to log out and exit the chat application.
 Contributing
 Contributions to this Chat App are welcome! If you find any bugs or have suggestions for new features, please open an issue or submit a pull request.
 
-License
-This project is licensed under the MIT License.
-
-Acknowledgements
-The Chat App is built using socket programming concepts inspired by Real Python's Socket Programming in Python.
-The MySQL integration is made possible with the mysql-connector-python library.
-The CLI interface is enhanced with the termcolor library.
-Contact
-For any questions or inquiries, please contact nathangetachew536@gmail.com.
